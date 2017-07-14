@@ -102,7 +102,7 @@ chmod +x "$CMD_DIR/ip"
 
 echo "#!/bin/bash
 
-ssh -i $HOME/.ssh/aws-key-$name.pem ubuntu@\$($CMD_DIR/ip)
+ssh  -oStrictHostKeyChecking=no -i $HOME/.ssh/aws-key-$name.pem ubuntu@\$($CMD_DIR/ip) \"\$@\"
 " > "$CMD_DIR/ssh"
 chmod +x "$CMD_DIR/ssh"
 
