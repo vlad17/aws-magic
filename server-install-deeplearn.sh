@@ -1,5 +1,4 @@
 #!/bin/bash
-# Run ./deeplearn-server-setup.sh for usage info
 
 ######################################################################
 # logging, help, exit functions
@@ -66,17 +65,22 @@ function fail {
 }
 
 function check {
-    echolog "check \$ $1"
-    "$1" | tee $(cat - >&3)
+    echolog
+    echolog "---> check \$ $1"
+    sh -c "$1" 2>&1 | tee $(cat - >&3)
+    echolog
 }
 
 if [ "$#" -ne "3" ]; then
     echolog "$usage"
+    trap '' EXIT
     exit 0
 fi
 passhash="$1"
 gittoken="$2"
 keyname="$3"
+
+set -exuo pipefail
 
 ######################################################################
 # verify OS
@@ -100,7 +104,7 @@ fi
 
 echolog -n "updating build tools... "
 sudo apt-get update
-sudo apt-get --assume-yes upgrade
+sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" --force-yes
 sudo apt-get --assume-yes install tmux build-essential gcc g++ make binutils
 sudo apt-get --assume-yes install software-properties-common git
 echolog OK
@@ -110,11 +114,11 @@ echolog OK
 ######################################################################
 
 echolog -n "nvidia cuda... "
-if ! (lscudpci | grep -i nvidia ); then
+if ! (lspci | grep -i nvidia ); then
     fail "nvidia device not found"
 fi
 cd $HOME/install
-wget "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_8.0.61-1_amd64.deb" -O cuda-repo-ubuntu1604_8.0.61-1_amd64.deb
+wget -q "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_8.0.61-1_amd64.deb" -O cuda-repo-ubuntu1604_8.0.61-1_amd64.deb
 sudo dpkg -i cuda-repo-ubuntu1604_8.0.61-1_amd64.deb
 sudo apt-get update
 sudo apt-get --assume-yes install cuda
@@ -126,7 +130,7 @@ check "nvcc --version"
 check "nvidia-smi"
 
 echolog -n "cuDNN... "
-wget "https://github.com/vlad17/aws-magic/blob/e1bcd69775f10ef6cc30335e4d803775f305c56b/cudnn-8.0-linux-x64-v5.1.tgz?raw=true" -O cudnn-8.0-linux-x64-v5.1.tgz
+wget -q "https://github.com/vlad17/aws-magic/blob/e1bcd69775f10ef6cc30335e4d803775f305c56b/cudnn-8.0-linux-x64-v5.1.tgz?raw=true" -O cudnn-8.0-linux-x64-v5.1.tgz
 tar zxf cudnn-8.0-linux-x64-v5.1.tgz
 cd cuda
 sudo cp lib64/* /usr/local/cuda/lib64/
@@ -134,20 +138,33 @@ sudo cp include/* /usr/local/cuda/include/
 echolog OK
 
 ######################################################################
+# python
+######################################################################
+
+echolog -n "anaconda... "
+cd $HOME/install
+anacondaURL="https://repo.continuum.io/archive/Anaconda3-4.4.0-Linux-x86_64.sh"
+wget -q "$anacondaURL" -O Anaconda3-4.4.0-Linux-x86_64.sh
+chmod +x Anaconda3-4.4.0-Linux-x86_64.sh
+./Anaconda3-4.4.0-Linux-x86_64.sh -f -b -p $HOME/anaconda3
+export PATH="$HOME/anaconda3/bin:$PATH"
+echolog OK
+
+######################################################################
 # tensorflow
 ######################################################################
 
-echolog "tf deps... "
+echolog -n "tf deps... "
+pip install --quiet six numpy wheel
 sudo apt-get --assume-yes install libcupti-dev
 sudo apt-get --assume-yes install openjdk-8-jdk
 echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
 curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
 sudo apt-get update
-sudo apt-get --assume-yes install bazel
-sudo apt-get --assume-yes install python3-numpy python3-dev python3-pip python3-wheel
+sudo apt-get --assume-yes install bazel python3-dev
 echolog OK
 
-echolog -n "tensorflow... "
+echolog -n "tensorflow (takes a couple hours)... "
 cd
 mkdir -p dev
 cd dev
@@ -163,26 +180,19 @@ printf "\n\ny\n\n\n\n\n\ny\n\n\ny\n\n\n\n\n\n\n${gpus}\n" | ./configure
 bazel build --config=opt --config=cuda //tensorflow/tools/pip_package:build_pip_package 
 bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
 tfwhl=$(ls -d /tmp/tensorflow_pkg/tensorflow*.whl)
+pip install --quiet $tfwhl
 echolog OK
 
-######################################################################
-# python
-######################################################################
-
-echolog "anaconda... "
-cd $HOME/install
-anacondaURL="https://repo.continuum.io/archive/Anaconda3-4.4.0-Linux-x86_64.sh"
-wget "$anacondaURL" -O Anaconda3-4.4.0-Linux-x86_64.sh
-chmod +x Anaconda3-4.4.0-Linux-x86_64.sh
-./Anaconda3-4.4.0-Linux-x86_64.sh -f -b -p $HOME/anaconda3
-export PATH="$HOME/anaconda3/bin:$PATH"
-
-# below necessary?
-pip install $tfwhl
-conda update libgcc
+cd # can't be in tf dir
+conda update --yes libgcc
 check "python -c 'import tensorflow as tf;print(tf.Session().run(tf.constant(\"Hello, TensorFlow!\")))'"
 
-pip install tabulate six keras
+######################################################################
+# other packages
+######################################################################
+
+echolog -n "additional python packages... "
+pip install --quiet tabulate keras
 echolog OK
 
 ######################################################################
@@ -201,6 +211,7 @@ cd misc/fresh-start
 
 ./config.sh
 
+echo "# added by server configuration script" >> $HOME/.bashrc
 echo "export PATH=\"\$HOME/anaconda3/bin:\$PATH\"" >> $HOME/.bashrc
 echo "export PATH=\"/usr/local/cuda-8.0/bin:\$PATH\"" >> $HOME/.bashrc
 source $HOME/.bashrc
@@ -209,7 +220,7 @@ source $HOME/.bashrc
 # git
 ######################################################################
 
-echolog "adding public key as $keyname to git... "
+echolog -n "adding public key as $keyname to git... "
 title="$keyname"
 key=$( cat ~/.ssh/id_rsa.pub )
 json=$( printf '{"title": "%s", "key": "%s"}' "$title" "$key" )
@@ -217,16 +228,35 @@ curl -u "vlad17:$gittoken" -d "$json" "https://api.github.com/user/keys"
 echolog OK
 
 ######################################################################
-# git
+# jupyter
 ######################################################################
 
-echolog "setting up server jupyter... "
+echolog -n "setting up server jupyter... "
 cd
 jupyter notebook --generate-config
 echo "c.NotebookApp.password = u'"$passhash"'
 c.NotebookApp.ip = '*'
 c.NotebookApp.open_browser = False" >> $HOME/.jupyter/jupyter_notebook_config.py
+conda install --quiet --yes -c conda-forge jupyter_contrib_nbextensions
+pip install yapf # for code-prettification
+for i in hide_input/main code_prettify/code_prettify code_font_size/code_font_size comment-uncomment/main spellchecker/main autoscroll/main; do jupyter nbextension enable $i ; done
 echolog OK
-echolog "   pass hash: $passhash"
 
+######################################################################
+# login greeting
+######################################################################
 
+echolog -n "updating login greeting... "
+for i in $(find /etc/update-motd.d/ -type f -printf '%f\n' | egrep -v '((^00)|(^9[^01]))-'); do
+    sudo rm -f /etc/update-motd.d/$i
+done
+sudo ln -s  /usr/bin/nvidia-smi /etc/update-motd.d/15-nvidia-smi
+echolog "OK"
+
+echolog "*****************************************************************"
+echolog "ALL DONE, rebooting"
+echolog "*****************************************************************"
+
+trap '' EXIT
+
+sudo reboot
