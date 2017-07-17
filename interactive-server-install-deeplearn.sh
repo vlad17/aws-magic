@@ -36,7 +36,11 @@ read -p "git pub key name [aws-$instance]: " keyname
 keyname=${keyname:-aws-$instance}
 
 echo
+echo "initiating install (this make take ~5 minutes):"
 
 # https://serverfault.com/questions/414341
-$HOME/aws-instances/$instance/ssh "nohup sh -c \"curl -s https://raw.githubusercontent.com/vlad17/aws-magic/master/server-install-deeplearn.sh | bash -s $passhash $gittoken $keyname\" > /tmp/install-out & tail -f /tmp/install-out"
+# https://unix.stackexchange.com/questions/45941
+$HOME/aws-instances/$instance/ssh "nohup sh -c \"curl -s https://raw.githubusercontent.com/vlad17/aws-magic/master/server-install-deeplearn.sh | bash -s $passhash $gittoken $keyname\" > /tmp/install-out & tail -f /tmp/install-out | sed '/^server-install-deeplearn.sh: ALL DONE!$/ q'"
+echo "*****************************************************************"
+echo
 

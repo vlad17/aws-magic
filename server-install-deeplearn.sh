@@ -255,9 +255,11 @@ sudo nvidia-docker exec --detach-keys="ctrl-@" --user mluser --interactive --tty
 ' > docker-up.sh
 chmod +x docker-up.sh
 
+echolog
 echolog "*****************************************************************"
-echolog "ALL DONE"
+echolog "server-install-deeplearn.sh: ALL DONE!"
 echolog "*****************************************************************"
+echolog
 
 trap '' EXIT
 
