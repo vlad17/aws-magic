@@ -63,7 +63,7 @@ chmod 400 $HOME/.ssh/aws-key-$name.pem
 
 echo "Allocating instance $instanceType"
 instanceId=$(aws ec2 run-instances --image-id $ami --count 1 --instance-type $instanceType --key-name aws-key-$name --security-group-ids $securityGroupId --subnet-id $subnetId --associate-public-ip-address --block-device-mapping "[ { \"DeviceName\": \"/dev/sda1\", \"Ebs\": { \"VolumeSize\": 128, \"VolumeType\": \"gp2\" } } ]" --query 'Instances[0].InstanceId' --output text)
-aws ec2 create-tags --resources $instanceId --tags --tags Key=Name,Value=$name-gpu-machine
+aws ec2 create-tags --resources $instanceId --tags --tags Key=Name,Value=$name
 allocAddr=$(aws ec2 allocate-address --domain vpc --query 'AllocationId' --output text)
 
 echo "Spinning up instance $instanceId at $allocAddr"
