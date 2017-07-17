@@ -219,9 +219,13 @@ echolog -n "pull in prepared docker image... "
 cd
 echo '#!/bin/bash
 echo "stopping:"
-sudo nvidia-docker stop $(docker ps -q)
+tostop=$(docker ps -q)
+if [ -n "$tostop" ]; then
+  sudo nvidia-docker stop $(docker ps -q)
+fi
 echo "starting:"
-sudo nvidia-docker run --publish 8888:8888 --tty --interactive --detach --expose 8888-8988 --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
+mkdir -p $HOME/saved-docker
+sudo nvidia-docker run --volume=$HOME/saved-docker:/home/mluser/saved-docker --publish 8888:8888 --tty --interactive --detach --expose 8888-8988 --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
 $HOME/.git.sh
 $HOME/.jupyter.sh
 ' > restart-container.sh
@@ -251,7 +255,7 @@ echo '#!/bin/bash
 
 set -e
 image=$($HOME/current-image.sh)
-sudo nvidia-docker exec --detach-keys="ctrl-@" --user mluser --interactive --tty $image /bin/bash
+sudo nvidia-docker exec --detach-keys="ctrl-@" --user mluser --interactive --tty $image /bin/bash -i -l
 ' > docker-up.sh
 chmod +x docker-up.sh
 
