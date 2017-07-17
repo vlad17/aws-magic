@@ -143,21 +143,17 @@ sudo systemctl enable docker
 if ! [ $(getent group docker) ]; then
     sudo groupadd docker
 fi
-sudo usermod -aG docker $USER
-# https://superuser.com/questions/272061
-oldgroup=$(id -g)
-newgrp docker
-newgrp $oldgroup
+sudo gpasswd -a $USER docker
 echolog OK
 
-check "docker run hello-world"
+check "sudo docker run hello-world"
 
 echolog -n "nvidia-docker... "
 wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb
 sudo dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb
 echolog OK
 
-check "nvidia-docker run --rm nvidia/cuda nvidia-smi"
+check "sudo nvidia-docker run --rm nvidia/cuda nvidia-smi"
 
 ######################################################################
 # git
@@ -178,7 +174,7 @@ json=$( printf '{"title": "%s", "key": "%s"}' "$title" "$key" )
 curl -u "vlad17:$gittoken" -d "$json" "https://api.github.com/user/keys"
 
 echo '#!/bin/bash
-image=$(nvidia-docker ps | grep -v "CONTAINER ID" | head -1 | cut -f1 -d" ")
+image=$(sudo nvidia-docker ps | grep -v "CONTAINER ID" | head -1 | cut -f1 -d" ")
 if [ -z "$image" ]; then
    echo error: docker not live
    exit 1
@@ -191,7 +187,7 @@ echo '#!/bin/bash
 
 set -e
 image=$($HOME/current-image.sh)
-nvidia-docker cp $HOME/.ssh $image:/home/mluser
+sudo nvidia-docker cp $HOME/.ssh $image:/home/mluser
 ' > .git.sh
 chmod +x .git.sh
 echolog OK
@@ -208,9 +204,9 @@ echo '#!/bin/bash
 
 set -e
 image=$($HOME/current-image.sh)
-nvidia-docker exec $image jupyter notebook --generate-config
-nvidia-docker cp $HOME/.jupytercfgadd  $image:/home/mluser
-nvidia-docker exec $image /bin/bash -c "cat .jupytercfgadd >> /home/mluser/.jupyter/jupyter_notebook_config.py"
+sudo nvidia-docker exec $image jupyter notebook --generate-config
+sudo nvidia-docker cp $HOME/.jupytercfgadd  $image:/home/mluser
+sudo nvidia-docker exec $image /bin/bash -c "cat .jupytercfgadd >> /home/mluser/.jupyter/jupyter_notebook_config.py"
 ' > .jupyter.sh
 chmod +x .jupyter.sh
 echolog OK
@@ -223,9 +219,9 @@ echolog -n "pull in prepared docker image... "
 cd
 echo '#!/bin/bash
 echo "stopping:"
-nvidia-docker stop $(docker ps -q)
+sudo nvidia-docker stop $(docker ps -q)
 echo "starting:"
-nvidia-docker run --publish 8888:8888 --tty --interactive --detach --expose 8888-8988 --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
+sudo nvidia-docker run --publish 8888:8888 --tty --interactive --detach --expose 8888-8988 --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
 $HOME/.git.sh
 $HOME/.jupyter.sh
 ' > restart-container.sh
@@ -233,8 +229,8 @@ chmod +x restart-container.sh
 ./restart-container.sh
 echolog OK
 
-check "nvidia-docker exec $($HOME/current-image.sh) whoami"
-check "nvidia-docker exec $($HOME/current-image.sh) python -c 'import tensorflow as tf;print(tf.Session().run(tf.constant(\"Hello, TensorFlow! \")))'"
+check "sudo nvidia-docker exec $($HOME/current-image.sh) whoami"
+check "sudo nvidia-docker exec $($HOME/current-image.sh) python -c 'import tensorflow as tf;print(tf.Session().run(tf.constant(\"Hello, TensorFlow! \")))'"
 
 ######################################################################
 # login greeting
@@ -255,7 +251,7 @@ echo '#!/bin/bash
 
 set -e
 image=$($HOME/current-image.sh)
-nvidia-docker exec --detach-keys="ctrl-@" --user mluser --interactive --tty $image /bin/bash
+sudo nvidia-docker exec --detach-keys="ctrl-@" --user mluser --interactive --tty $image /bin/bash
 ' > docker-up.sh
 chmod +x docker-up.sh
 
