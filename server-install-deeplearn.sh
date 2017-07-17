@@ -260,9 +260,8 @@ nvidia-docker exec --detach-keys="ctrl-@" --user mluser --interactive --tty $ima
 chmod +x docker-up.sh
 
 echolog "*****************************************************************"
-echolog "ALL DONE, rebooting"
+echolog "ALL DONE"
 echolog "*****************************************************************"
 
 trap '' EXIT
 
-sudo reboot
