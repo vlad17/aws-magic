@@ -110,18 +110,18 @@ echolog OK
 ######################################################################
 
 echolog -n "updating build tools... "
-sudo add-apt-repository ppa:graphics-drivers
+sudo apt-key adv --fetch-keys "http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub"
+sudo sh -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
 sudo apt-get update
-sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" --force-yes
-sudo apt-get --assume-yes install tmux build-essential gcc g++ make binutils
-sudo apt-get --assume-yes install software-properties-common git
-sudo apt-get --assume-yes install apt-transport-https ca-certificates curl
+# sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" --force-yes
+sudo apt-get --assume-yes --no-install-recommends install \
+     tmux software-properties-common git \
+     apt-transport-https ca-certificates curl
 wget https://raw.githubusercontent.com/vlad17/misc/master/fresh-start/.tmux.conf -O .tmux.conf
 echolog OK
 
 echolog -n "nvidia drivers... "
-sudo apt-get --assume-yes install nvidia-370
-sudo apt-get --assume-yes install nvidia-modprobe
+sudo apt-get --assume-yes --no-install-recommends install cuda-drivers
 echolog OK
 
 check "nvidia-modprobe"
@@ -138,7 +138,7 @@ sudo add-apt-repository \
    $(lsb_release -cs) \
    stable"
 sudo apt-get update
-sudo apt-get --assume-yes install docker-ce
+sudo apt-get --assume-yes --no-install-recommends install docker-ce
 sudo systemctl enable docker
 if ! [ $(getent group docker) ]; then
     sudo groupadd docker
@@ -149,7 +149,7 @@ echolog OK
 check "sudo docker run hello-world"
 
 echolog -n "nvidia-docker... "
-wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb
+wget -P /tmp "https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb"
 sudo dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb
 echolog OK
 
