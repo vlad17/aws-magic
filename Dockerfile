@@ -26,7 +26,7 @@ RUN sudo apt-get --assume-yes install build-essential cmake emacs git tmux
 RUN mkdir -p dev && git clone https://github.com/vlad17/misc.git
 RUN /bin/bash misc/fresh-start/emacs-install.sh
 RUN /bin/bash misc/fresh-start/config.sh
-RUN echo 'export USER=$(whoami)' >> .bashrc
+RUN echo "export USER=mluser" >> .bashrc
 
 # jupyter config
 RUN sudo pip install yapf
