@@ -255,7 +255,7 @@ echo '#!/bin/bash
 
 set -e
 image=$($HOME/current-image.sh)
-sudo nvidia-docker exec --detach-keys="ctrl-@" --user mluser --interactive --tty $image /bin/bash -i -l
+sudo nvidia-docker exec --detach-keys="ctrl-q,ctrl-q" --user mluser --interactive --tty $image /bin/bash -i -l
 ' > docker-up.sh
 chmod +x docker-up.sh
 
