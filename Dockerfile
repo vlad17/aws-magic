@@ -22,10 +22,16 @@ RUN /bin/bash misc/fresh-start/emacs-install.sh
 RUN /bin/bash misc/fresh-start/config.sh
 RUN echo "export USER=mluser" >> .bashrc
 ENV USER=mluser
-RUN bash -c "yes | emacs --daemon"
 
+# ML-related python libs
+RUN sudo apt-get --assume-yes install graphviz
+RUN sudo -H pip --no-cache-dir install \
+    numpy scipy matplotlib jupyter pandas tabulate keras six sympy \
+    Pillow h5py sklearn pydot graphviz jupyter_contrib_nbextensions \
+    bcolz pydot graphviz
+    
 # jupyter config
-RUN sudo pip install yapf
+RUN sudo -H pip install yapf
 RUN jupyter contrib nbextension install --user
 RUN jupyter nbextension enable hide_input/main
 RUN jupyter nbextension enable code_prettify/code_prettify
@@ -34,16 +40,10 @@ RUN jupyter nbextension enable comment-uncomment/main
 RUN jupyter nbextension enable spellchecker/main
 RUN jupyter nbextension enable autoscroll/main
 
-# ML-related python libs
-RUN sudo apt-get --assume-yes install graphviz
-RUN sudo pip --no-cache-dir install \
-    numpy scipy matplotlib jupyter pandas tabulate keras six sympy \
-    Pillow h5py sklearn pydot graphviz jupyter_contrib_nbextensions \
-    bcolz pydot graphviz
-
 # Tensorboard
 EXPOSE 6006
 # Jupyter ports
 EXPOSE 8888
 
-CMD ["/bin/bash"]
+CMD ["/bin/bash", "-c", "nohup emacs --daemon >/tmp/emacsout"]
+
