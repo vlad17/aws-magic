@@ -1,11 +1,5 @@
 FROM tensorflow/tensorflow:latest-gpu-py3 
 
-# ML-related python libs
-RUN pip --no-cache-dir install \
-    numpy scipy matplotlib jupyter pandas tabulate keras six sympy \
-    Pillow h5py sklearn
-RUN pip install jupyter_contrib_nbextensions
-
 # Update repo index with cmake
 RUN add-apt-repository ppa:george-edison55/cmake-3.x -y
 RUN apt-get update
@@ -27,6 +21,8 @@ RUN mkdir -p dev && git clone https://github.com/vlad17/misc.git
 RUN /bin/bash misc/fresh-start/emacs-install.sh
 RUN /bin/bash misc/fresh-start/config.sh
 RUN echo "export USER=mluser" >> .bashrc
+ENV USER=mluser
+RUN bash -c "yes | emacs --daemon"
 
 # jupyter config
 RUN sudo pip install yapf
@@ -37,6 +33,13 @@ RUN jupyter nbextension enable code_font_size/code_font_size
 RUN jupyter nbextension enable comment-uncomment/main
 RUN jupyter nbextension enable spellchecker/main
 RUN jupyter nbextension enable autoscroll/main
+
+# ML-related python libs
+RUN sudo apt-get --assume-yes install graphviz
+RUN sudo pip --no-cache-dir install \
+    numpy scipy matplotlib jupyter pandas tabulate keras six sympy \
+    Pillow h5py sklearn pydot graphviz jupyter_contrib_nbextensions \
+    bcolz pydot graphviz
 
 # Tensorboard
 EXPOSE 6006
