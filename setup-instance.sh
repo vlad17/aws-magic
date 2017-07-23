@@ -51,10 +51,11 @@ aws ec2 create-tags --resources $routeTableId --tags --tags Key=Name,Value=$name
 routeTableAssoc=$(aws ec2 associate-route-table --route-table-id $routeTableId --subnet-id $subnetId --output text)
 aws ec2 create-route --route-table-id $routeTableId --destination-cidr-block "0.0.0.0/0" --gateway-id $internetGatewayId >/dev/null
 
-echo "security: only enable ssh or jupyter over ports 8888-8988 from $cidr"
+echo "security: only enable ssh or jupyter over ports 6006,8888-8898 from $cidr"
 securityGroupId=$(aws ec2 create-security-group --group-name $name-security-group --description "sg for $name (lone $instanceType VPC)" --vpc-id $vpcId --query 'GroupId' --output text)
 aws ec2 authorize-security-group-ingress --group-id $securityGroupId --protocol tcp --port 22 --cidr $cidr
-aws ec2 authorize-security-group-ingress --group-id $securityGroupId --protocol tcp --port 8888-8988 --cidr $cidr
+aws ec2 authorize-security-group-ingress --group-id $securityGroupId --protocol tcp --port 8888-8898 --cidr $cidr
+aws ec2 authorize-security-group-ingress --group-id $securityGroupId --protocol tcp --port 6006 --cidr $cidr
 
 echo "create ssh key aws-key-$name.pem"
 mkdir -p $HOME/.ssh
