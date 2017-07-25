@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:latest-gpu-py3 
+FROM floydhub/tensorflow:1.2.1-gpu-py3_aws.7
 
 # Update repo index with cmake
 RUN add-apt-repository ppa:george-edison55/cmake-3.x -y
@@ -28,7 +28,8 @@ RUN sudo apt-get --assume-yes install graphviz
 RUN sudo -H pip --no-cache-dir install \
     numpy scipy matplotlib jupyter pandas tabulate keras six sympy \
     Pillow h5py sklearn pydot graphviz jupyter_contrib_nbextensions \
-    bcolz pydot graphviz
+    bcolz pydot graphviz contexttimer contexttimer autopep8 \
+    flake8 pylint cloudpickle ray
     
 # jupyter config
 RUN sudo -H pip install yapf
