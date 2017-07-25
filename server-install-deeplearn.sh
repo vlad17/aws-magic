@@ -225,7 +225,7 @@ if [ -n "$tostop" ]; then
 fi
 echo "starting:"
 mkdir -p $HOME/saved-docker
-sudo nvidia-docker run --volume=$HOME/saved-docker:/home/mluser/saved-docker --publish 8888:8888 --publish 6006:6006 --tty --interactive --detach --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
+sudo nvidia-docker run --shm-size=100GB --volume=$HOME/saved-docker:/home/mluser/saved-docker --publish 8888:8888 --publish 6006:6006 --tty --interactive --detach --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
 $HOME/.git.sh
 $HOME/.jupyter.sh
 ' > restart-container.sh
@@ -258,6 +258,9 @@ image=$($HOME/current-image.sh)
 sudo nvidia-docker exec --detach-keys="ctrl-q,ctrl-q" --user mluser --interactive --tty $image /bin/bash -i -l
 ' > docker-up.sh
 chmod +x docker-up.sh
+
+# Redis hack
+sudo sh -c "echo never > /sys/kernel/mm/transparent_hugepage/enabled"
 
 echolog
 echolog "*****************************************************************"
