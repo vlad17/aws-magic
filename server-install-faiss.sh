@@ -42,13 +42,10 @@ make -j$(nproc) tests/test_blas
 ./tests/test_blas
 make -j$(nproc)
 make -j$(nproc) tests/demo_ivfpq_indexing
-tests/demo_ivfpq_indexing
 make py
 cd gpu
 make -j$(nproc)
 make -j$(nproc) test/demo_ivfpq_indexing_gpu
-test/demo_ivfpq_indexing_gpu
 make py
 cd ..
-python -c "import faiss"
-python -c "import _swigfaiss_gpu"
+
