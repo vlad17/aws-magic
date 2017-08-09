@@ -4,6 +4,11 @@ FROM floydhub/tensorflow:1.2.1-gpu-py3_aws.7
 RUN add-apt-repository ppa:george-edison55/cmake-3.x -y
 RUN apt-get update
 
+# faiss
+RUN apt-get --assume-yes install build-essential cmake git
+RUN cd /tmp && git clone https://github.com/vlad17/aws-magic.git
+RUN /tmp/aws-magic/server-install-faiss.sh
+
 # Add a sudo-user, mluser, for a more familiar work env
 RUN apt-get --assume-yes install sudo
 RUN useradd -ms /bin/bash mluser
@@ -16,12 +21,15 @@ USER mluser
 WORKDIR /home/mluser
 
 # Install my emacs config
-RUN sudo apt-get --assume-yes install build-essential cmake emacs git tmux
+RUN apt-get --assume-yes install emacs tmux
 RUN mkdir -p dev && git clone https://github.com/vlad17/misc.git
 RUN /bin/bash misc/fresh-start/emacs-install.sh
 RUN /bin/bash misc/fresh-start/config.sh
 RUN echo "export USER=mluser" >> .bashrc
 ENV USER=mluser
+
+# Add faiss to pythonpath
+RUN echo "export PYTHONPATH=/opt/faiss:$PYTHONPATH" >> .bashrc
 
 # ML-related python libs
 RUN sudo apt-get --assume-yes install graphviz
