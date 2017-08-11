@@ -5,6 +5,7 @@ if [ -d /opt/faiss ]; then
 fi
 
 set -e
+set -v
 
 cd /tmp
 git clone https://github.com/facebookresearch/faiss.git
@@ -48,4 +49,3 @@ make -j$(nproc)
 make -j$(nproc) test/demo_ivfpq_indexing_gpu
 make py
 cd ..
-

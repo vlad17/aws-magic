@@ -21,7 +21,7 @@ USER mluser
 WORKDIR /home/mluser
 
 # Install my emacs config
-RUN apt-get --assume-yes install emacs tmux
+RUN sudo apt-get --assume-yes install emacs tmux
 RUN mkdir -p dev && git clone https://github.com/vlad17/misc.git
 RUN /bin/bash misc/fresh-start/emacs-install.sh
 RUN /bin/bash misc/fresh-start/config.sh
