@@ -31,13 +31,13 @@ ENV USER=mluser
 # Add faiss to pythonpath
 RUN echo "export PYTHONPATH=/opt/faiss:$PYTHONPATH" >> .bashrc
 
-# ML-related python libs
-RUN sudo apt-get --assume-yes install graphviz
+# ML/computing-related python libs
+RUN sudo apt-get --assume-yes install graphviz htop
 RUN sudo -H pip --no-cache-dir install \
     numpy scipy matplotlib jupyter pandas tabulate keras six sympy \
     Pillow h5py sklearn pydot graphviz jupyter_contrib_nbextensions \
     bcolz pydot graphviz contexttimer contexttimer autopep8 \
-    flake8 pylint cloudpickle ray
+    flake8 pylint cloudpickle ray joblib
     
 # jupyter config
 RUN sudo -H pip install yapf
