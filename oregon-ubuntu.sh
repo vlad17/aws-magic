@@ -2,7 +2,7 @@
 #
 # Offer some default options for an Ubuntu instance
 
-if [ "$#" -gt 2 ]; then
+if [ "$#" -gt 2 ] || [ "$1" = "--help" ]; then
     echo "Usage: oregon-ubuntu.sh [name] [instancetype]"
     exit 1
 fi
@@ -12,7 +12,7 @@ if [ $region != "us-west-2" ]; then
     echo "us-west-2 (oregon) region only"
     exit 1
 fi
-ami="ami-8203e3fa"
+ami="ami-8803e0f0"
 
 if [ "$#" -gt 0 ]; then
     name="$1"
@@ -21,8 +21,9 @@ else
     while [ -d "$HOME/aws-instances/s$i" ] ; do
         let i++
     done
-    name="s$i"
-    read -p "choose server name [$name]: " name
+    dfl="s$i"
+    read -p "choose server name [$dfl]: " name
+    name=${name:-$dfl}
 fi
 
 if [ -d "$name" ]; then
@@ -33,8 +34,9 @@ fi
 if [ "$#" -gt 1 ]; then
     instancetype="$2"
 else
-    instancetype="g3.8xlarge"
-    read -p "choose server name [$instancetype]: " instancetype
+    dfl="g3.8xlarge"
+    read -p "choose server name [$dfl]: " instancetype
+    instancetype=${instancetype:-$dfl}
 fi
-
+echo $instancetype $name
 $(dirname $(readlink -f "$0"))/setup-instance.sh "$ami" "$instancetype" "$name"
