@@ -2,6 +2,8 @@
 #
 # Runs deeplearn-server-setup.sh interactively
 
+set -e
+
 if ! [ -d $HOME/aws-instances ]; then
     echo "expecting ~/aws-instances to exist"
     exit 1
