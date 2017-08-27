@@ -7,7 +7,7 @@ RUN apt-get update
 # faiss
 RUN apt-get --assume-yes install build-essential cmake git
 RUN cd /tmp && git clone https://github.com/vlad17/aws-magic.git
-RUN /tmp/aws-magic/server-install-faiss.sh
+RUN /tmp/aws-magic/server/server-install-faiss.sh
 
 # Add a sudo-user, mluser, for a more familiar work env
 RUN apt-get --assume-yes install sudo
