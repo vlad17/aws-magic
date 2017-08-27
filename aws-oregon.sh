@@ -1,9 +1,11 @@
 #!/bin/bash
 #
-# Offer some default options for an Ubuntu instance
+# Offer some default options for an Ubuntu instance, interactively.
 
-if [ "$#" -gt 2 ] || [ "$1" = "--help" ]; then
-    echo "Usage: oregon-ubuntu.sh [name] [instancetype]"
+if [ "$#" -gt 3 ] || [ "$1" = "--help" ]; then
+    echo "Usage: aws-oregon.sh [name] [instancetype] [ami]"
+    echo "Thin wrapper with defaults around setup-instance.sh"
+    echo "See description in aws-magic/README.md"
     exit 1
 fi
 
@@ -12,7 +14,6 @@ if [ $region != "us-west-2" ]; then
     echo "us-west-2 (oregon) region only"
     exit 1
 fi
-ami="ami-8803e0f0"
 
 if [ "$#" -gt 0 ]; then
     name="$1"
@@ -38,5 +39,13 @@ else
     read -p "choose server name [$dfl]: " instancetype
     instancetype=${instancetype:-$dfl}
 fi
-echo $instancetype $name
+
+if [ "$#" -gt 2 ]; then
+    ami="$3"
+else
+    dfl="ami-8803e0f0"
+    read -p "choose server name [$dfl, Ubuntu 16.04 HVM]: " ami
+    ami=${ami:-$dfl}
+fi
+
 $(dirname $(readlink -f "$0"))/setup-instance.sh "$ami" "$instancetype" "$name"
