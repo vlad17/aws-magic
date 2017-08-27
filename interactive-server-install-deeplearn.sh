@@ -17,7 +17,7 @@ fi
 instances="${instances::-1}"
 
 read -p "choose instance among {$instances}: " instance
-if ! [ -d $HOME/aws-instances/$instance ]; then
+if ! [ -d $HOME/aws-instances/$instance ] || [ -z "$instance" ] ; then
     echo "invalid choice $instance"
     exit 1
 fi
