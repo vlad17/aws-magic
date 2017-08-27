@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# Convenience script for updating the dockerfile
 
 set -e
 set -v
