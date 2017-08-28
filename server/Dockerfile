@@ -37,7 +37,7 @@ RUN sudo -H pip --no-cache-dir install \
     numpy scipy matplotlib jupyter pandas tabulate keras six sympy \
     Pillow h5py sklearn pydot graphviz jupyter_contrib_nbextensions \
     bcolz pydot graphviz contexttimer contexttimer autopep8 \
-    flake8 pylint cloudpickle ray joblib
+    flake8 pylint cloudpickle ray joblib gym
     
 # jupyter config
 RUN sudo -H pip install yapf
@@ -54,5 +54,5 @@ EXPOSE 6006
 # Jupyter ports
 EXPOSE 8888
 
-CMD ["/bin/bash", "-c", "nohup emacs --daemon >/tmp/emacsout"]
+CMD ["/bin/bash"]
 
