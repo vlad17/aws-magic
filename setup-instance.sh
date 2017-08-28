@@ -186,11 +186,15 @@ echo "$CMD_DIR/stop   will stop the currently-running instance"
 echo "$CMD_DIR/state  will describe the current state of the instance"
 echo "$CMD_DIR/delete will stop the instance and delete all metadata about the instance from both your computer and AWS"
 
-echo "#!/bin/bash
+echo '#!/bin/bash
 
-aws ec2 start-instances --instance-ids $instanceId
-aws ec2 wait instance-running --instance-ids $instanceId
-" > "$CMD_DIR/start"
+if [ "$('"$CMD_DIR"'/state)" != "stopped" ]; then
+    echo instance must be stopped before it can be started
+    exit 1
+fi
+aws ec2 start-instances --instance-ids '"$instanceId"'
+aws ec2 wait instance-running --instance-ids '"$instanceId"'
+' > "$CMD_DIR/start"
 chmod +x "$CMD_DIR/start"
 
 echo "#!/bin/bash
