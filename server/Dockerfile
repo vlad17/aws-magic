@@ -49,6 +49,9 @@ RUN jupyter nbextension enable comment-uncomment/main
 RUN jupyter nbextension enable spellchecker/main
 RUN jupyter nbextension enable autoscroll/main
 
+# emacs server
+RUN emacs --daemon
+
 # Tensorboard
 EXPOSE 6006
 # Jupyter ports
