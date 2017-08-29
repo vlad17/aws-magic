@@ -183,7 +183,7 @@ fi
 echo $image
 ' > current-image.sh
 chmod +x current-image.sh
-image=$(current-image)
+image=$(./current-image.sh)
 
 echolog OK
 
@@ -224,6 +224,18 @@ sudo nvidia-docker cp $HOME/.jupytercfgadd $image:/home/mluser
 sudo nvidia-docker exec $image /bin/bash -c "cat /home/mluser/.jupytercfgadd >> /home/mluser/.jupyter/jupyter_notebook_config.py"
 
 echolog OK
+
+######################################################################
+# mujoco
+######################################################################
+
+if [ -f $HOME/mjkey.txt ]; then
+    echolog -n "setting up mujoco... "
+    sudo nvidia-docker cp $HOME/mjkey.txt $image:/home/mluser
+    sudo nvidia-docker exec $image /bin/bash -c "mkdir /home/mluser/.mujoco/ && mv /home/mluser/mjkey.txt /home/mluser/.mujoco"
+    sudo nvidia-docker exec $image /bin/bash -c "wget https://www.roboti.us/download/mjpro131_linux.zip && unzip mjpro131_linux.zip -d /home/mluser/.mujoco"
+    echolog OK
+fi
 
 ######################################################################
 # login greeting

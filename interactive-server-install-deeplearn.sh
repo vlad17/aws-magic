@@ -33,16 +33,29 @@ passhash=$(python -c "from notebook.auth import passwd; print(passwd())")
 read -p "git token file location [~/aws-git-token]: " tokenloc
 tokenloc=${tokenloc:-$HOME/aws-git-token}
 gittoken=$(cat $tokenloc)
+if [ -z "$gittoken" ]; then
+    echo "git token invalid"
+    exit 1
+fi
 
 read -p "git pub key name [aws-$instance]: " keyname
 keyname=${keyname:-aws-$instance}
 
+read -p "mujoco license file [~/.mujoco/mjkey.txt]: " mjkey
+mjkey=${mjkey:-$HOME/.mujoco/mjkey.txt}
+if ! [ -f "$mjkey" ]; then
+    echo 'mujoco file not present'
+    exit 1
+fi
+
 echo
 echo "initiating install (this make take ~5 minutes):"
 
+scp -oStrictHostKeyChecking=no -i "$HOME/.ssh/aws-key-$instance.pem" "$mjkey" ubuntu@$($HOME/aws-instances/$instance/ip):~/mjkey.txt
+
 # https://serverfault.com/questions/414341
 # https://unix.stackexchange.com/questions/45941
-$HOME/aws-instances/$instance/ssh "nohup sh -c \"curl -s https://raw.githubusercontent.com/vlad17/aws-magic/master/server/server-install-deeplearn.sh | bash -s $passhash $gittoken $keyname\" > /tmp/install-out & tail -f /tmp/install-out | sed '/^server-install-deeplearn.sh: ALL DONE!$/ q'"
+$HOME/aws-instances/$instance/ssh -t "nohup sh -c \"curl -s https://raw.githubusercontent.com/vlad17/aws-magic/master/server/server-install-deeplearn.sh | bash -s $passhash $gittoken $keyname\" > /tmp/install-out & tail -f /tmp/install-out | sed '/^server-install-deeplearn.sh: ALL DONE!$/ q'"
 echo "*****************************************************************"
 echo
 
