@@ -115,7 +115,7 @@ sudo apt-get update
 # sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" --force-yes
 sudo apt-get --assume-yes --no-install-recommends install \
      tmux software-properties-common git \
-     apt-transport-https ca-certificates curl build-essential
+     apt-transport-https ca-certificates curl build-essential htop
 wget --no-verbose https://raw.githubusercontent.com/vlad17/misc/master/fresh-start/.tmux.conf -O .tmux.conf
 echolog OK
 
