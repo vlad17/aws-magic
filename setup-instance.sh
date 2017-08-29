@@ -212,6 +212,7 @@ chmod +x "$CMD_DIR/ssh"
 echo "#!/bin/bash
 
 aws ec2 stop-instances --instance-ids $instanceId
+aws ec2 wait instance-stopped --instance-ids $instanceId
 " > "$CMD_DIR/stop"
 chmod +x "$CMD_DIR/stop"
 
