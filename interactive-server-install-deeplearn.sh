@@ -51,11 +51,11 @@ fi
 echo
 echo "initiating install (this make take ~5 minutes):"
 
-scp -oStrictHostKeyChecking=no -i "$HOME/.ssh/aws-key-$instance.pem" "$mjkey" ubuntu@$($HOME/aws-instances/$instance/ip):~/mjkey.txt
+scp -q -oStrictHostKeyChecking=no -i "$HOME/.ssh/aws-key-$instance.pem" "$mjkey" ubuntu@$($HOME/aws-instances/$instance/ip):~/mjkey.txt
 
 # https://serverfault.com/questions/414341
 # https://unix.stackexchange.com/questions/45941
-$HOME/aws-instances/$instance/ssh -t "nohup sh -c \"curl -s https://raw.githubusercontent.com/vlad17/aws-magic/master/server/server-install-deeplearn.sh | bash -s $passhash $gittoken $keyname\" > /tmp/install-out & tail -f /tmp/install-out | sed '/^server-install-deeplearn.sh: ALL DONE!$/ q'"
+$HOME/aws-instances/$instance/ssh -t "nohup sh -c \"curl -s https://raw.githubusercontent.com/vlad17/aws-magic/master/server/server-install-deeplearn.sh | bash -s $passhash $gittoken $keyname\" > /tmp/install-out 2>&1 & tail -f /tmp/install-out | sed '/^server-install-deeplearn.sh: ALL DONE!$/ q'"
 echo "*****************************************************************"
 echo
 
