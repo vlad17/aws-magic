@@ -110,18 +110,26 @@ echolog OK
 ######################################################################
 
 echolog -n "updating build tools... "
-sudo apt-key adv --fetch-keys "http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub"
-sudo sh -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
 sudo apt-get update
+# below line isn't necessary, apparently, but that might not hold forever
 # sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" --force-yes
 sudo apt-get --assume-yes --no-install-recommends install \
      tmux software-properties-common git \
-     apt-transport-https ca-certificates curl
+     apt-transport-https ca-certificates curl build-essential
 wget https://raw.githubusercontent.com/vlad17/misc/master/fresh-start/.tmux.conf -O .tmux.conf
 echolog OK
 
 echolog -n "nvidia drivers... "
-sudo apt-get --assume-yes --no-install-recommends install cuda-drivers
+# per https://github.com/openai/gym/issues/247 we need to manually install with no OpenGL
+# if we didn't need to mess with nvidia flags the following would be the least hacky solution
+# for installing the most recent drivers
+# sudo apt-key adv --fetch-keys "http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub"
+# sudo sh -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
+# sudo apt-get --assume-yes --no-install-recommends install cuda-drivers
+wget http://us.download.nvidia.com/XFree86/Linux-x86_64/384.66/NVIDIA-Linux-x86_64-384.66.run
+sudo sh NVIDIA-Linux-x86_64-384.66.run --no-opengl-files --silent
+wget https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run
+sudo sh cuda_8.0.61_375.26_linux-run --override --no-opengl-libs --silent
 echolog OK
 
 check "nvidia-modprobe"
@@ -189,7 +197,30 @@ echolog OK
 
 check "sudo nvidia-docker exec $($HOME/current-image.sh) whoami"
 check "sudo nvidia-docker exec $($HOME/current-image.sh) python -c 'import tensorflow as tf;print(tf.Session().run(tf.constant(\"Hello, TensorFlow! \")))'"
+check "sudo nvidia-docker exec $($HOME/current-image.sh) python -c '
+import gym
+from gym import wrappers
+env = gym.make(\"CartPole-v0\")
+env = wrappers.Monitor(env, \"/tmp/cartpole-experiment-1\")
+for i_episode in range(20):
+    observation = env.reset()
+    for t in range(100):
+        env.render()
+        print(observation)
+        action = env.action_space.sample()
+        observation, reward, done, info = env.step(action)
+        if done:
+            print(\"Episode finished after {} timesteps\".format(t+1))
+            break
+'"
 
+######################################################################
+# emacs
+######################################################################
+
+echolog -n "adding emacs on host... "
+sudo apt-get --assume-yes --no-install-recommends install emacs
+echolog OK
 
 ######################################################################
 # git
