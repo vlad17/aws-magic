@@ -56,5 +56,24 @@ script_for_server=$(dirname $(readlink -f "$0"))/server/server-install-deeplearn
 scp -q -oStrictHostKeyChecking=no -i "$HOME/.ssh/aws-key-$instance.pem" $script_for_server ubuntu@$($HOME/aws-instances/$instance/ip):~
 # https://serverfault.com/questions/414341
 # https://unix.stackexchange.com/questions/45941
-$HOME/aws-instances/$instance/ssh -t "bash ~/server-install-deeplearn.sh $passhash $gittoken $keyname 2>&1 | tee /tmp/install-out"
+CMD_DIR="$HOME/aws-instances/$instance"
+$CMD_DIR/ssh -t "bash ~/server-install-deeplearn.sh $passhash $gittoken $keyname 2>&1 | tee /tmp/install-out"
 
+echo '#!/bin/bash
+set -e
+if [ -z "$1" ]; then
+   echo missing src "(location copying from docker)"
+   exit 1
+fi
+
+if [ -z "$2" ]; then
+   echo missing dst "(location copying to on pc)"
+   exit 1
+fi
+
+tempdir=$('"$CMD_DIR/ssh"' mktemp -d)
+'"$CMD_DIR/ssh"' sudo nvidia-docker cp '"'"'$(~/current-image.sh)'"'"'":$1" $tempdir
+scp -q -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem ubuntu@$($HOME/aws-instances/$instance/ip)"':"$tempdir/*" $2
+'"$CMD_DIR/ssh"' -t rm -rf $tempdir
+' > "$CMD_DIR/dockercp"
+chmod +x "$CMD_DIR/dockercp"
