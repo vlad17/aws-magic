@@ -36,7 +36,7 @@ if [ "$#" -gt 1 ]; then
     instancetype="$2"
 else
     dfl="g3.8xlarge"
-    read -p "choose server name [$dfl]: " instancetype
+    read -p "choose instance type [$dfl]: " instancetype
     instancetype=${instancetype:-$dfl}
 fi
 
@@ -44,7 +44,7 @@ if [ "$#" -gt 2 ]; then
     ami="$3"
 else
     dfl="ami-8803e0f0"
-    read -p "choose server name [$dfl, Ubuntu 16.04 HVM]: " ami
+    read -p "choose ami [$dfl, Ubuntu 16.04 HVM]: " ami
     ami=${ami:-$dfl}
 fi
 
