@@ -156,6 +156,42 @@ echolog OK
 check "sudo nvidia-docker run --rm nvidia/cuda nvidia-smi"
 
 ######################################################################
+# prepared image
+######################################################################
+
+echolog -n "pull in prepared docker image, launch it... "
+cd
+
+echo '#!/bin/bash
+tostop=$(docker ps -q)
+if [ -n "$tostop" ]; then
+  echo "stopping:"
+  sudo nvidia-docker stop $(docker ps -q)
+fi
+echo "starting:"
+sudo nvidia-docker run --restart=unless-stopped --shm-size=100GB --mount source=docker-home,destination=/home/mluser,type=volume --publish 8888:8888 --publish 6006:6006 --tty --interactive --detach --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
+' > restart-container.sh
+chmod +x restart-container.sh
+./restart-container.sh
+
+echo '#!/bin/bash
+image=$(sudo nvidia-docker ps | grep -v "CONTAINER ID" | head -1 | cut -f1 -d" ")
+if [ -z "$image" ]; then
+   echo error: docker not live
+   exit 1
+fi
+echo $image
+' > current-image.sh
+chmod +x current-image.sh
+image=$(current-image)
+
+echolog OK
+
+check "sudo nvidia-docker exec $($HOME/current-image.sh) whoami"
+check "sudo nvidia-docker exec $($HOME/current-image.sh) python -c 'import tensorflow as tf;print(tf.Session().run(tf.constant(\"Hello, TensorFlow! \")))'"
+
+
+######################################################################
 # git
 ######################################################################
 
@@ -172,24 +208,7 @@ title="$keyname"
 key=$( cat ~/.ssh/id_rsa.pub )
 json=$( printf '{"title": "%s", "key": "%s"}' "$title" "$key" )
 curl -u "vlad17:$gittoken" -d "$json" "https://api.github.com/user/keys"
-
-echo '#!/bin/bash
-image=$(sudo nvidia-docker ps | grep -v "CONTAINER ID" | head -1 | cut -f1 -d" ")
-if [ -z "$image" ]; then
-   echo error: docker not live
-   exit 1
-fi
-echo $image
-' > current-image.sh
-chmod +x current-image.sh
-
-echo '#!/bin/bash
-
-set -e
-image=$($HOME/current-image.sh)
 sudo nvidia-docker cp $HOME/.ssh $image:/home/mluser
-' > .git.sh
-chmod +x .git.sh
 echolog OK
 
 ######################################################################
@@ -200,41 +219,11 @@ echolog -n "setting up server jupyter... "
 echo "c.NotebookApp.password = u'"$passhash"'
 c.NotebookApp.ip = '*'
 c.NotebookApp.open_browser = False" > .jupytercfgadd
-echo '#!/bin/bash
 
-set -e
-image=$($HOME/current-image.sh)
-sudo nvidia-docker exec $image jupyter notebook --generate-config
-sudo nvidia-docker cp $HOME/.jupytercfgadd  $image:/home/mluser
-sudo nvidia-docker exec $image /bin/bash -c "cat .jupytercfgadd >> /home/mluser/.jupyter/jupyter_notebook_config.py"
-' > .jupyter.sh
-chmod +x .jupyter.sh
+sudo nvidia-docker cp $HOME/.jupytercfgadd $image:/home/mluser
+sudo nvidia-docker exec $image /bin/bash -c "cat /home/mluser/.jupytercfgadd >> /home/mluser/.jupyter/jupyter_notebook_config.py"
+
 echolog OK
-
-######################################################################
-# prepared image
-######################################################################
-
-echolog -n "pull in prepared docker image... "
-cd
-echo '#!/bin/bash
-echo "stopping:"
-tostop=$(docker ps -q)
-if [ -n "$tostop" ]; then
-  sudo nvidia-docker stop $(docker ps -q)
-fi
-echo "starting:"
-mkdir -p $HOME/saved-docker
-sudo nvidia-docker run --shm-size=100GB --volume=$HOME/saved-docker:/home/mluser/saved-docker --publish 8888:8888 --publish 6006:6006 --tty --interactive --detach --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
-$HOME/.git.sh
-$HOME/.jupyter.sh
-' > restart-container.sh
-chmod +x restart-container.sh
-./restart-container.sh
-echolog OK
-
-check "sudo nvidia-docker exec $($HOME/current-image.sh) whoami"
-check "sudo nvidia-docker exec $($HOME/current-image.sh) python -c 'import tensorflow as tf;print(tf.Session().run(tf.constant(\"Hello, TensorFlow! \")))'"
 
 ######################################################################
 # login greeting
@@ -258,9 +247,6 @@ image=$($HOME/current-image.sh)
 sudo nvidia-docker exec --detach-keys="ctrl-q,ctrl-q" --user mluser --interactive --tty $image /bin/bash -i -l
 ' > docker-up.sh
 chmod +x docker-up.sh
-
-# Redis hack
-sudo sh -c "echo never > /sys/kernel/mm/transparent_hugepage/enabled"
 
 echolog
 echolog "*****************************************************************"
