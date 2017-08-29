@@ -77,3 +77,22 @@ scp -q -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem ubuntu@$
 '"$CMD_DIR/ssh"' -t rm -rf $tempdir
 ' > "$CMD_DIR/dockercp"
 chmod +x "$CMD_DIR/dockercp"
+
+echo '#!/bin/bash
+set -e
+if [ -z "$1" ]; then
+   echo missing src "(location copying from pc)"
+   exit 1
+fi
+
+if [ -z "$2" ]; then
+   echo missing dst "(location copying to docker)"
+   exit 1
+fi
+
+tempdir=$('"$CMD_DIR/ssh"' mktemp -d)
+scp -q -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem"' "$1" '"ubuntu@$($HOME/aws-instances/$instance/ip)"':"$tempdir"
+'"$CMD_DIR/ssh"' sudo nvidia-docker cp "$tempdir/*" '"'"'$(~/current-image.sh)'"'"'":$2"
+'"$CMD_DIR/ssh"' -t rm -rf $tempdir
+' > "$CMD_DIR/cpdocker"
+chmod +x "$CMD_DIR/cpdocker"
