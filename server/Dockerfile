@@ -33,7 +33,7 @@ ENV USER=mluser
 RUN echo "export PYTHONPATH=/opt/faiss:$PYTHONPATH" >> .bashrc
 
 # ML/computing-related python libs
-RUN sudo apt-get --assume-yes install graphviz htop
+RUN sudo apt-get --assume-yes install graphviz htop xvfb
 RUN sudo -H pip --no-cache-dir install \
     numpy scipy matplotlib jupyter pandas tabulate keras six sympy \
     Pillow h5py sklearn pydot graphviz jupyter_contrib_nbextensions \

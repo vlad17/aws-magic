@@ -116,7 +116,7 @@ sudo apt-get update
 sudo apt-get --assume-yes --no-install-recommends install \
      tmux software-properties-common git \
      apt-transport-https ca-certificates curl build-essential
-wget https://raw.githubusercontent.com/vlad17/misc/master/fresh-start/.tmux.conf -O .tmux.conf
+wget --no-verbose https://raw.githubusercontent.com/vlad17/misc/master/fresh-start/.tmux.conf -O .tmux.conf
 echolog OK
 
 echolog -n "nvidia drivers... "
@@ -126,10 +126,12 @@ echolog -n "nvidia drivers... "
 # sudo apt-key adv --fetch-keys "http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub"
 # sudo sh -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
 # sudo apt-get --assume-yes --no-install-recommends install cuda-drivers
-wget http://us.download.nvidia.com/XFree86/Linux-x86_64/384.66/NVIDIA-Linux-x86_64-384.66.run
+cd install
+wget --no-verbose http://us.download.nvidia.com/XFree86/Linux-x86_64/384.66/NVIDIA-Linux-x86_64-384.66.run
 sudo sh NVIDIA-Linux-x86_64-384.66.run --no-opengl-files --silent
-wget https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run
+wget --no-verbose  https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run
 sudo sh cuda_8.0.61_375.26_linux-run --override --no-opengl-libs --silent
+cd
 echolog OK
 
 check "nvidia-modprobe"
@@ -157,7 +159,7 @@ echolog OK
 check "sudo docker run hello-world"
 
 echolog -n "nvidia-docker... "
-wget -P /tmp "https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb"
+wget --no-verbose  -P /tmp "https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb"
 sudo dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb
 echolog OK
 
@@ -197,7 +199,8 @@ echolog OK
 
 check "sudo nvidia-docker exec $($HOME/current-image.sh) whoami"
 check "sudo nvidia-docker exec $($HOME/current-image.sh) python -c 'import tensorflow as tf;print(tf.Session().run(tf.constant(\"Hello, TensorFlow! \")))'"
-check "sudo nvidia-docker exec $($HOME/current-image.sh) python -c '
+# three layers of quote-nesting, bear with me...
+check "sudo nvidia-docker exec $($HOME/current-image.sh)"' /bin/bash -c "xvfb-run -a -s \"-screen 0 1400x900x24 +extension RANDR\" -- python -c '"'"'
 import gym
 from gym import wrappers
 env = gym.make(\"CartPole-v0\")
@@ -212,7 +215,7 @@ for i_episode in range(20):
         if done:
             print(\"Episode finished after {} timesteps\".format(t+1))
             break
-'"
+'"'\""
 
 ######################################################################
 # emacs
