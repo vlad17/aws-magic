@@ -289,7 +289,12 @@ echo '#!/bin/bash
 
 set -e
 image=$($HOME/current-image.sh)
-sudo nvidia-docker exec --detach-keys="ctrl-q,ctrl-q" --user mluser --interactive --tty $image /bin/bash -i -l
+cols=$(tput cols)
+rows=$(tput lines)
+sudo nvidia-docker exec --detach-keys="ctrl-q,ctrl-q" --user mluser --interactive --tty $image /bin/bash -i -c "
+stty cols $cols rows $rows
+exec /bin/bash -i -l
+"
 ' > docker-up.sh
 chmod +x docker-up.sh
 
