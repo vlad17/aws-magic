@@ -115,7 +115,7 @@ sudo apt-get update
 # sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" --force-yes
 sudo apt-get --assume-yes --no-install-recommends install \
      tmux software-properties-common git \
-     apt-transport-https ca-certificates curl build-essential htop
+     apt-transport-https ca-certificates curl build-essential htop dkms
 wget --no-verbose https://raw.githubusercontent.com/vlad17/misc/master/fresh-start/.tmux.conf -O .tmux.conf
 echolog OK
 
@@ -128,9 +128,9 @@ echolog -n "nvidia drivers... "
 # sudo apt-get --assume-yes --no-install-recommends install cuda-drivers
 cd install
 wget --no-verbose http://us.download.nvidia.com/XFree86/Linux-x86_64/384.66/NVIDIA-Linux-x86_64-384.66.run
-sudo sh NVIDIA-Linux-x86_64-384.66.run --no-opengl-files --silent
+sudo /bin/bash NVIDIA-Linux-x86_64-384.66.run --no-opengl-files --silent --dkms
 wget --no-verbose  https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run
-sudo sh cuda_8.0.61_375.26_linux-run --override --no-opengl-libs --silent
+sudo /bin/bash cuda_8.0.61_375.26_linux-run --override --no-opengl-libs --silent
 cd
 echolog OK
 
@@ -300,9 +300,11 @@ chmod +x docker-up.sh
 
 echolog
 echolog "*****************************************************************"
-echolog "server-install-deeplearn.sh: ALL DONE!"
+echolog "server-install-deeplearn.sh: ALL DONE! (rebooting)"
 echolog "*****************************************************************"
 echolog
 
 trap '' EXIT
+
+sudo reboot
 

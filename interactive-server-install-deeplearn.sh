@@ -51,6 +51,8 @@ fi
 echo
 echo "initiating install (this make take ~5 minutes):"
 
+# TODO wait for ssh here
+
 scp -q -oStrictHostKeyChecking=no -i "$HOME/.ssh/aws-key-$instance.pem" "$mjkey" ubuntu@$($HOME/aws-instances/$instance/ip):~/mjkey.txt
 script_for_server=$(dirname $(readlink -f "$0"))/server/server-install-deeplearn.sh
 scp -q -oStrictHostKeyChecking=no -i "$HOME/.ssh/aws-key-$instance.pem" $script_for_server ubuntu@$($HOME/aws-instances/$instance/ip):~
@@ -96,3 +98,5 @@ scp -q -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem"' "$1" '
 '"$CMD_DIR/ssh"' -t rm -rf $tempdir
 ' > "$CMD_DIR/cpdocker"
 chmod +x "$CMD_DIR/cpdocker"
+
+# TODO wait for ssh here
