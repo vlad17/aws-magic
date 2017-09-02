@@ -59,7 +59,8 @@ scp -q -oStrictHostKeyChecking=no -i "$HOME/.ssh/aws-key-$instance.pem" $script_
 # https://serverfault.com/questions/414341
 # https://unix.stackexchange.com/questions/45941
 CMD_DIR="$HOME/aws-instances/$instance"
-$CMD_DIR/ssh -t "bash ~/server-install-deeplearn.sh $passhash $gittoken $keyname 2>&1 | tee /tmp/install-out"
+
+
 
 echo '#!/bin/bash
 set -e
@@ -75,7 +76,7 @@ fi
 
 tempdir=$('"$CMD_DIR/ssh"' mktemp -d)
 '"$CMD_DIR/ssh"' sudo nvidia-docker cp '"'"'$(~/current-image.sh)'"'"'":$1" $tempdir
-scp -q -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem ubuntu@$($HOME/aws-instances/$instance/ip)"':"$tempdir/*" $2
+scp -r -q -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem ubuntu@$($HOME/aws-instances/$instance/ip)"':"$tempdir/*" $2
 '"$CMD_DIR/ssh"' -t rm -rf $tempdir
 ' > "$CMD_DIR/dockercp"
 chmod +x "$CMD_DIR/dockercp"
@@ -93,10 +94,13 @@ if [ -z "$2" ]; then
 fi
 
 tempdir=$('"$CMD_DIR/ssh"' mktemp -d)
-scp -q -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem"' "$1" '"ubuntu@$($HOME/aws-instances/$instance/ip)"':"$tempdir"
+scp -r -q -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem"' "$1" '"ubuntu@$($HOME/aws-instances/$instance/ip)"':"$tempdir"
 '"$CMD_DIR/ssh"' sudo nvidia-docker cp "$tempdir/*" '"'"'$(~/current-image.sh)'"'"'":$2"
 '"$CMD_DIR/ssh"' -t rm -rf $tempdir
 ' > "$CMD_DIR/cpdocker"
 chmod +x "$CMD_DIR/cpdocker"
+
+
+$CMD_DIR/ssh -t "bash ~/server-install-deeplearn.sh $passhash $gittoken $keyname 2>&1 | tee /tmp/install-out"
 
 # TODO wait for ssh here
