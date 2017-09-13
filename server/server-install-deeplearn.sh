@@ -271,6 +271,23 @@ if [ -f $HOME/mjkey.txt ]; then
 fi
 
 ######################################################################
+# pytorch
+######################################################################
+
+if [ -f $HOME/mjkey.txt ]; then
+    echolog -n "installing pytorch... "
+    sudo nvidia-docker exec $image /bin/bash -c "sudo -H pip --no-cache-dir install --upgrade http://download.pytorch.org/whl/cu80/torch-0.1.12.post1-cp35-cp35m-linux_x86_64.whl"
+    sudo nvidia-docker exec $image /bin/bash -c "cd /tmp && \
+        git clone https://github.com/pytorch/vision \
+            && cd vision \
+            && git checkout 7492fae4c2cd16fb2783dce7e7583d7245cfbe92 \
+            && sudo -H python setup.py install \
+            && cd .. \
+            && sudo rm -rf vision"
+    echolog OK
+fi
+
+######################################################################
 # login greeting
 ######################################################################
 
