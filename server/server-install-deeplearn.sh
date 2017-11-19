@@ -119,6 +119,12 @@ sudo apt-get --assume-yes --no-install-recommends install \
 wget --no-verbose https://raw.githubusercontent.com/vlad17/misc/master/fresh-start/.tmux.conf -O .tmux.conf
 echolog OK
 
+echolog -n "deleting old drivers... "
+if [ -f /usr/bin/nvidia-uninstall ] ; then
+    sudo /usr/bin/nvidia-uninstall --no-questions --accept-license
+fi
+echolog OK
+
 echolog -n "nvidia drivers... "
 # per https://github.com/openai/gym/issues/247 we need to manually install with no OpenGL
 # if we didn't need to mess with nvidia flags the following would be the least hacky solution
@@ -136,6 +142,7 @@ cd
 echolog OK
 
 check "nvidia-modprobe"
+check "cat /proc/driver/nvidia/version"
 
 ######################################################################
 # docker
