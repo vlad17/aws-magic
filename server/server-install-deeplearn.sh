@@ -127,8 +127,9 @@ echolog -n "nvidia drivers... "
 # sudo sh -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
 # sudo apt-get --assume-yes --no-install-recommends install cuda-drivers
 cd install
-wget --no-verbose http://us.download.nvidia.com/XFree86/Linux-x86_64/384.66/NVIDIA-Linux-x86_64-384.66.run
-sudo /bin/bash NVIDIA-Linux-x86_64-384.66.run --no-opengl-files --silent --dkms
+driver_http="http://us.download.nvidia.com/XFree86/Linux-x86_64/384.98/NVIDIA-Linux-x86_64-384.98.run"
+wget --no-verbose $driver_http -O nvidia.run
+sudo /bin/bash nvidia.run --no-opengl-files --silent --dkms
 wget --no-verbose  https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run
 sudo /bin/bash cuda_8.0.61_375.26_linux-run --override --no-opengl-libs --silent
 cd
