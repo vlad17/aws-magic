@@ -119,12 +119,6 @@ sudo apt-get --assume-yes --no-install-recommends install \
 wget --no-verbose https://raw.githubusercontent.com/vlad17/misc/master/fresh-start/.tmux.conf -O .tmux.conf
 echolog OK
 
-echolog -n "deleting old drivers... "
-if [ -f /usr/bin/nvidia-uninstall ] ; then
-    sudo /usr/bin/nvidia-uninstall --no-questions --accept-license
-fi
-echolog OK
-
 echolog -n "nvidia drivers... "
 # per https://github.com/openai/gym/issues/247 we need to manually install with no OpenGL
 # if we didn't need to mess with nvidia flags the following would be the least hacky solution
@@ -136,8 +130,9 @@ cd install
 driver_http="http://us.download.nvidia.com/XFree86/Linux-x86_64/384.98/NVIDIA-Linux-x86_64-384.98.run"
 wget --no-verbose $driver_http -O nvidia.run
 sudo /bin/bash nvidia.run --no-opengl-files --silent --dkms
-wget --no-verbose  https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run
-sudo /bin/bash cuda_8.0.61_375.26_linux-run --override --no-opengl-libs --silent
+cuda_http="https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda_9.0.176_384.81_linux-run"
+wget --no-verbose  $cuda_http -O cuda-run
+sudo /bin/bash cuda-run --override --no-opengl-libs --silent
 cd
 echolog OK
 
