@@ -76,7 +76,7 @@ fi
 
 tempdir=$('"$CMD_DIR/ssh"' mktemp -d)
 '"$CMD_DIR/ssh"' sudo nvidia-docker cp '"'"'$(~/current-image.sh)'"'"'":$1" $tempdir
-scp -r -q -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem ubuntu@$($HOME/aws-instances/$instance/ip)"':"$tempdir/*" $2
+scp -r -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem ubuntu@$($HOME/aws-instances/$instance/ip)"':"$tempdir/*" $2
 '"$CMD_DIR/ssh"' -t sudo rm -rf $tempdir
 ' > "$CMD_DIR/dockercp"
 chmod +x "$CMD_DIR/dockercp"
