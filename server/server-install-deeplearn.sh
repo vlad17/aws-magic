@@ -270,6 +270,7 @@ if [ -f $HOME/mjkey.txt ]; then
     sudo nvidia-docker cp $HOME/mjkey.txt $image:/home/mluser
     sudo nvidia-docker exec $image /bin/bash -c "mkdir /home/mluser/.mujoco/ && mv /home/mluser/mjkey.txt /home/mluser/.mujoco"
     sudo nvidia-docker exec $image /bin/bash -c "wget https://www.roboti.us/download/mjpro131_linux.zip && unzip mjpro131_linux.zip -d /home/mluser/.mujoco"
+    sudo nvidia-docker exec $image /bin/bash -c "wget https://www.roboti.us/download/mjpro150_linux.zip && unzip mjpro150_linux.zip -d /home/mluser/.mujoco"
     echolog OK
 fi
 
