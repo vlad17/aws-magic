@@ -94,8 +94,10 @@ fi
 
 echolog -n "verifying nvidia... "
 HAS_GPU="true"
+DOCKER_IMAGE="vlad17/deep-learning:tf-gpu-ubuntu"
 if ! (lspci | grep -i nvidia ); then
     HAS_GPU="false"
+    DOCKER_IMAGE="vlad17/deep-learning:tf-cpu-ubuntu"
 fi
 echolog OK
 echolog "HAS_GPU = $HAS_GPU"
@@ -180,14 +182,14 @@ fi
 echolog -n "pull in prepared docker image, launch it... "
 cd
 
-echo '#!/bin/bas
+echo '#!/bin/bash
 tostop=$('"$DOCKER"' ps -q)
 if [ -n "$tostop" ]; then
   echo "stopping:"
   sudo '"$DOCKER"' stop $(docker ps -q)
 fi
 echo "starting:"
-sudo '"$DOCKER"' run --restart=unless-stopped --shm-size=100GB --mount source=docker-home,destination=/home/mluser,type=volume --publish 8888:8888 --publish 6006:6006 --tty --interactive --detach --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
+sudo '"$DOCKER"' run --restart=unless-stopped --shm-size=100GB --mount source=docker-home,destination=/home/mluser,type=volume --publish 8888:8888 --publish 6006:6006 --tty --interactive --detach --detach-keys="ctrl-@" '"$DOCKER_IMAGE"'
 ' > restart-container.sh
 chmod +x restart-container.sh
 ./restart-container.sh
