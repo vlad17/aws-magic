@@ -1,4 +1,4 @@
-FROM floydhub/tensorflow:1.2.1-gpu-py3_aws.7
+FROM floydhub/tensorflow:1.4.1-gpu.cuda9cudnn7-py3_aws.19
 
 # Update repo index with cmake
 RUN add-apt-repository ppa:george-edison55/cmake-3.x -y

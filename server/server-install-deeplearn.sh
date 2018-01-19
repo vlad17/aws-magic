@@ -17,16 +17,9 @@ keyname is the name of the public key that the script will register with
 github.
 
 
-Assuming we have an Nvidia GPU on Ubuntu 16.04 and a Tesla K80 GPU, installs:
- - TensorFlow from source (for python3)
- - emacs by distribution (with autocomplete in dev/)
- - cmake by distribution
- - Various python packages. Those included in anaconda3 and, in addition:
-   tabulate six keras
-
-This should all be run on the server (an AWS p2 or g3).
-
-Additional configuration performed:
+Installs various stuff on the server:
+ - if GPU present, nvidia drivers
+ - (nvidia-)docker
  - Add autocomplete to emacs
  - Add my dotfiles, from https://github.com/vlad17/misc
  - Jupyter and git configuration (ssh keys/passwords)
@@ -100,10 +93,12 @@ else
 fi
 
 echolog -n "verifying nvidia... "
+HAS_GPU="true"
 if ! (lspci | grep -i nvidia ); then
-    fail "nvidia device not found"
+    HAS_GPU="false"
 fi
 echolog OK
+echolog "HAS_GPU = $HAS_GPU"
 
 ######################################################################
 # build deps
@@ -119,25 +114,27 @@ sudo apt-get --assume-yes --no-install-recommends install \
 wget --no-verbose https://raw.githubusercontent.com/vlad17/misc/master/fresh-start/.tmux.conf -O .tmux.conf
 echolog OK
 
-echolog -n "nvidia drivers... "
-# per https://github.com/openai/gym/issues/247 we need to manually install with no OpenGL
-# if we didn't need to mess with nvidia flags the following would be the least hacky solution
-# for installing the most recent drivers
-# sudo apt-key adv --fetch-keys "http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub"
-# sudo sh -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
-# sudo apt-get --assume-yes --no-install-recommends install cuda-drivers
-cd install
-driver_http="http://us.download.nvidia.com/XFree86/Linux-x86_64/384.98/NVIDIA-Linux-x86_64-384.98.run"
-wget --no-verbose $driver_http -O nvidia.run
-sudo /bin/bash nvidia.run --no-opengl-files --silent --dkms
-cuda_http="https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda_9.0.176_384.81_linux-run"
-wget --no-verbose  $cuda_http -O cuda-run
-sudo /bin/bash cuda-run --override --no-opengl-libs --silent
-cd
-echolog OK
+if [ "$HAS_GPU" = true ] ; then
+  echolog -n "nvidia drivers... "
+  # per https://github.com/openai/gym/issues/247 we need to manually install with no OpenGL
+  # if we didn't need to mess with nvidia flags the following would be the least hacky solution
+  # for installing the most recent drivers
+  # sudo apt-key adv --fetch-keys "http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub"
+  # sudo sh -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
+  # sudo apt-get --assume-yes --no-install-recommends install cuda-drivers
+  cd install
+  driver_http="http://us.download.nvidia.com/XFree86/Linux-x86_64/384.98/NVIDIA-Linux-x86_64-384.98.run"
+  wget --no-verbose $driver_http -O nvidia.run
+  sudo /bin/bash nvidia.run --no-opengl-files --silent --dkms
+  cuda_http="https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda_9.0.176_384.81_linux-run"
+  wget --no-verbose  $cuda_http -O cuda-run
+  sudo /bin/bash cuda-run --override --no-opengl-libs --silent
+  cd
+  echolog OK
 
-check "nvidia-modprobe"
-check "cat /proc/driver/nvidia/version"
+  check "nvidia-modprobe"
+  check "cat /proc/driver/nvidia/version"
+fi
 
 ######################################################################
 # docker
@@ -161,12 +158,20 @@ echolog OK
 
 check "sudo docker run hello-world"
 
-echolog -n "nvidia-docker... "
-wget --no-verbose  -P /tmp "https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb"
-sudo dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb
-echolog OK
+if [ "$HAS_GPU" = true ] ; then
+  echolog -n "nvidia-docker... "
+  wget --no-verbose  -P /tmp "https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb"
+  sudo dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb
+  echolog OK
 
-check "sudo nvidia-docker run --rm nvidia/cuda nvidia-smi"
+  check "sudo nvidia-docker run --rm nvidia/cuda nvidia-smi"
+fi
+
+DOCKER="docker"
+if [ "$HAS_GPU" = true ] ; then
+    DOCKER="nvidia-docker"
+fi
+
 
 ######################################################################
 # prepared image
@@ -175,20 +180,20 @@ check "sudo nvidia-docker run --rm nvidia/cuda nvidia-smi"
 echolog -n "pull in prepared docker image, launch it... "
 cd
 
-echo '#!/bin/bash
-tostop=$(docker ps -q)
+echo '#!/bin/bas
+tostop=$('"$DOCKER"' ps -q)
 if [ -n "$tostop" ]; then
   echo "stopping:"
-  sudo nvidia-docker stop $(docker ps -q)
+  sudo '"$DOCKER"' stop $(docker ps -q)
 fi
 echo "starting:"
-sudo nvidia-docker run --restart=unless-stopped --shm-size=100GB --mount source=docker-home,destination=/home/mluser,type=volume --publish 8888:8888 --publish 6006:6006 --tty --interactive --detach --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
+sudo '"$DOCKER"' run --restart=unless-stopped --shm-size=100GB --mount source=docker-home,destination=/home/mluser,type=volume --publish 8888:8888 --publish 6006:6006 --tty --interactive --detach --detach-keys="ctrl-@" vlad17/deep-learning:tf-gpu-ubuntu
 ' > restart-container.sh
 chmod +x restart-container.sh
 ./restart-container.sh
 
 echo '#!/bin/bash
-image=$(sudo nvidia-docker ps | grep -v "CONTAINER ID" | head -1 | cut -f1 -d" ")
+image=$(sudo '"$DOCKER"' ps | grep -v "CONTAINER ID" | head -1 | cut -f1 -d" ")
 if [ -z "$image" ]; then
    echo error: docker not live
    exit 1
@@ -200,10 +205,10 @@ image=$(./current-image.sh)
 
 echolog OK
 
-check "sudo nvidia-docker exec $($HOME/current-image.sh) whoami"
-check "sudo nvidia-docker exec $($HOME/current-image.sh) python -c 'import tensorflow as tf;print(tf.Session().run(tf.constant(\"Hello, TensorFlow! \")))'"
+check "sudo $DOCKER exec $($HOME/current-image.sh) whoami"
+check "sudo $DOCKER exec $($HOME/current-image.sh) python -c 'import tensorflow as tf;print(tf.Session().run(tf.constant(\"Hello, TensorFlow! \")))'"
 # three layers of quote-nesting, bear with me...
-check "sudo nvidia-docker exec $($HOME/current-image.sh)"' /bin/bash -c "xvfb-run -a -s \"-screen 0 1400x900x24 +extension RANDR\" -- python -c '"'"'
+check "sudo $DOCKER exec $($HOME/current-image.sh)"' /bin/bash -c "xvfb-run -a -s \"-screen 0 1400x900x24 +extension RANDR\" -- python -c '"'"'
 import gym
 from gym import wrappers
 env = gym.make(\"CartPole-v0\")
@@ -244,7 +249,7 @@ title="$keyname"
 key=$( cat ~/.ssh/id_rsa.pub )
 json=$( printf '{"title": "%s", "key": "%s"}' "$title" "$key" )
 curl -u "vlad17:$gittoken" -d "$json" "https://api.github.com/user/keys"
-sudo nvidia-docker cp $HOME/.ssh $image:/home/mluser
+sudo $DOCKER cp $HOME/.ssh $image:/home/mluser
 echolog OK
 
 ######################################################################
@@ -256,8 +261,8 @@ echo "c.NotebookApp.password = u'"$passhash"'
 c.NotebookApp.ip = '*'
 c.NotebookApp.open_browser = False" > .jupytercfgadd
 
-sudo nvidia-docker cp $HOME/.jupytercfgadd $image:/home/mluser
-sudo nvidia-docker exec $image /bin/bash -c "cat /home/mluser/.jupytercfgadd >> /home/mluser/.jupyter/jupyter_notebook_config.py"
+sudo $DOCKER cp $HOME/.jupytercfgadd $image:/home/mluser
+sudo $DOCKER exec $image /bin/bash -c "cat /home/mluser/.jupytercfgadd >> /home/mluser/.jupyter/jupyter_notebook_config.py"
 
 echolog OK
 
@@ -267,10 +272,10 @@ echolog OK
 
 if [ -f $HOME/mjkey.txt ]; then
     echolog -n "setting up mujoco... "
-    sudo nvidia-docker cp $HOME/mjkey.txt $image:/home/mluser
-    sudo nvidia-docker exec $image /bin/bash -c "mkdir /home/mluser/.mujoco/ && mv /home/mluser/mjkey.txt /home/mluser/.mujoco"
-    sudo nvidia-docker exec $image /bin/bash -c "wget https://www.roboti.us/download/mjpro131_linux.zip && unzip mjpro131_linux.zip -d /home/mluser/.mujoco"
-    sudo nvidia-docker exec $image /bin/bash -c "wget https://www.roboti.us/download/mjpro150_linux.zip && unzip mjpro150_linux.zip -d /home/mluser/.mujoco"
+    sudo $DOCKER cp $HOME/mjkey.txt $image:/home/mluser
+    sudo $DOCKER exec $image /bin/bash -c "mkdir /home/mluser/.mujoco/ && mv /home/mluser/mjkey.txt /home/mluser/.mujoco"
+    sudo $DOCKER exec $image /bin/bash -c "wget https://www.roboti.us/download/mjpro131_linux.zip && unzip mjpro131_linux.zip -d /home/mluser/.mujoco"
+    sudo $DOCKER exec $image /bin/bash -c "wget https://www.roboti.us/download/mjpro150_linux.zip && unzip mjpro150_linux.zip -d /home/mluser/.mujoco"
     echolog OK
 fi
 
@@ -282,7 +287,9 @@ echolog -n "updating login greeting... "
 for i in $(find /etc/update-motd.d/ -type f -printf '%f\n' | egrep -v '00'); do
     sudo rm -f /etc/update-motd.d/$i
 done
-sudo ln -s  /usr/bin/nvidia-smi /etc/update-motd.d/15-nvidia-smi
+if [ "$HAS_GPU" = true ] ; then
+    sudo ln -s  /usr/bin/nvidia-smi /etc/update-motd.d/15-nvidia-smi
+fi
 echolog "OK"
 
 ######################################################################
@@ -295,7 +302,7 @@ set -e
 image=$($HOME/current-image.sh)
 cols=$(tput cols)
 rows=$(tput lines)
-sudo nvidia-docker exec --detach-keys="ctrl-q,ctrl-q" --user mluser --interactive --tty $image /bin/bash -i -c "
+sudo '"$DOCKER"' exec --detach-keys="ctrl-q,ctrl-q" --user mluser --interactive --tty $image /bin/bash -i -c "
 stty cols $cols rows $rows
 exec /bin/bash -i -l
 "
