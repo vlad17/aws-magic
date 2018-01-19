@@ -6,7 +6,7 @@ set -e
 set -v
 
 docker login
-image=$(nvidia-docker build --quiet .)
+image=$(docker build --quiet .)
 pushname="vlad17/deep-learning:tf-cpu-ubuntu"
 docker tag $image $pushname
 docker push $pushname
