@@ -75,7 +75,7 @@ if [ -z "$2" ]; then
 fi
 
 tempdir=$('"$CMD_DIR/ssh"' mktemp -d)
-'"$CMD_DIR/ssh"' sudo nvidia-docker cp '"'"'$(~/current-image.sh)'"'"'":$1" $tempdir
+'"$CMD_DIR/ssh"' sudo docker cp '"'"'$(~/current-image.sh)'"'"'":$1" $tempdir
 scp -r -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem ubuntu@$($HOME/aws-instances/$instance/ip)"':"$tempdir/*" $2
 '"$CMD_DIR/ssh"' -t sudo rm -rf $tempdir
 ' > "$CMD_DIR/dockercp"
@@ -95,7 +95,7 @@ fi
 
 tempdir=$('"$CMD_DIR/ssh"' mktemp -d)
 scp -r -q -oStrictHostKeyChecking=no -i '"$HOME/.ssh/aws-key-$instance.pem"' "$1" '"ubuntu@$($HOME/aws-instances/$instance/ip)"':"$tempdir"
-'"$CMD_DIR/ssh"' sudo nvidia-docker cp "$tempdir/*" '"'"'$(~/current-image.sh)'"'"'":$2"
+'"$CMD_DIR/ssh"' sudo docker cp "$tempdir/*" '"'"'$(~/current-image.sh)'"'"'":$2"
 '"$CMD_DIR/ssh"' -t sudo rm -rf $tempdir
 ' > "$CMD_DIR/cpdocker"
 chmod +x "$CMD_DIR/cpdocker"
