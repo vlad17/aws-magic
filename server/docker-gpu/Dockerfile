@@ -1,4 +1,4 @@
-FROM floydhub/tensorflow:1.4.1-gpu.cuda9cudnn7-py3_aws.19
+FROM floydhub/tensorflow:1.7.1-gpu.cuda9cudnn7-py3_aws.27
 
 # Update repo index with cmake
 RUN add-apt-repository ppa:george-edison55/cmake-3.x -y
@@ -38,8 +38,10 @@ RUN sudo -H pip --no-cache-dir install \
     numpy scipy matplotlib jupyter pandas tabulate keras six sympy \
     Pillow h5py sklearn pydot graphviz jupyter_contrib_nbextensions \
     bcolz pydot graphviz contexttimer contexttimer autopep8 \
-    flake8 pylint cloudpickle ray joblib gym line_profiler
-    
+    flake8 pylint cloudpickle ray joblib gym line_profiler jedi
+ENV PYTHON_VERSION=$(python --version 2>&1 | cut -d" " -f 2 | cut -d. -f1-2)
+RUN sudo -H pip install http://download.pytorch.org/whl/cu90/torch-0.4.0-cp${PYTHON_VERSION}-cp${PYTHON_VERSION}m-linux_x86_64.whl
+
 # jupyter config
 RUN sudo -H pip install yapf
 RUN jupyter contrib nbextension install --user
