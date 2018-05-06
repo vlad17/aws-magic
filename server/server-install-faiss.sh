@@ -16,6 +16,7 @@ apt-get -y install libopenblas-dev swig
 pyflags=$(echo -I$(python -c "import distutils.sysconfig; print(distutils.sysconfig.get_python_inc())") -I$(python -c "import numpy ; print(numpy.get_include())"))
 echo 'CC=g++
 CFLAGS=-fPIC -m64 -Wall -g -O3 -mavx -msse4 -mpopcnt -fopenmp -Wno-sign-compare -std=c++11 -fopenmp
+CXXFLAGS=$(CFLAGS) -std=c++11
 LDFLAGS=-g -fPIC  -fopenmp
 SHAREDEXT=so
 SHAREDFLAGS=-shared
@@ -42,7 +43,10 @@ BLASLDFLAGSSONVCC=-Xlinker  $(BLASLDFLAGS)' > makefile.inc
 make -j$(nproc) tests/test_blas
 ./tests/test_blas
 make -j$(nproc)
-make -j$(nproc) tests/demo_ivfpq_indexing
+cd tests
+make -j$(nproc)
+make run
+cd ..
 make py
 cd gpu
 make -j$(nproc)
