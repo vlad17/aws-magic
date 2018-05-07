@@ -125,12 +125,21 @@ if [ "$HAS_GPU" = true ] ; then
   # sudo sh -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
   # sudo apt-get --assume-yes --no-install-recommends install cuda-drivers
   cd install
-  driver_http="http://us.download.nvidia.com/XFree86/Linux-x86_64/384.98/NVIDIA-Linux-x86_64-384.98.run"
+  driver_http="http://us.download.nvidia.com/XFree86/Linux-x86_64/390.48/NVIDIA-Linux-x86_64-390.48.run"
   wget --no-verbose $driver_http -O nvidia.run
   sudo /bin/bash nvidia.run --no-opengl-files --silent --dkms
-  cuda_http="https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda_9.0.176_384.81_linux-run"
+  cuda_http="https://developer.nvidia.com/compute/cuda/9.1/Prod/local_installers/cuda_9.1.85_387.26_linux"
   wget --no-verbose  $cuda_http -O cuda-run
   sudo /bin/bash cuda-run --override --no-opengl-libs --silent
+  patch="https://developer.nvidia.com/compute/cuda/9.1/Prod/patches/1/cuda_9.1.85.1_linux"
+  wget --no-verbose $patch -O cuda-patch1
+  sudo /bin/bash cuda-patch1 --accept-eula --silent
+  patch="https://developer.nvidia.com/compute/cuda/9.1/Prod/patches/2/cuda_9.1.85.2_linux"
+  wget --no-verbose $patch -O cuda-patch2
+  sudo /bin/bash cuda-patch2 --accept-eula --silent
+  patch="https://developer.nvidia.com/compute/cuda/9.1/Prod/patches/3/cuda_9.1.85.3_linux"
+  wget --no-verbose $patch -O cuda-patch3
+  sudo /bin/bash cuda-patch3 --accept-eula --silent
   cd
   echolog OK
 
