@@ -29,11 +29,11 @@ Quick-start:
     
 Requires that the default `aws` cli user has been set up (i.e., `~/.aws/config` should have your API keys). This is a thin wrapper with defaults around:
 
-    setup-instance.sh ami instancetype name
+    setup-instance.sh ami instancetype name open-extra
     
 This will create and start a cloud machine on AWS. Security info:
 
-* Ports 6006 (Tensorboard), 8888-8898 (Jupyter), and 22 (ssh) are open.
+* Ports 6006 (Tensorboard), 8888-8898 (Jupyter), and 22 (ssh) are open if `open-extra` is `true`. If it's `false`, only ssh is open.
 * ssh is only accessible by a public key stored in your `~/.ssh`
 * No Jupyter process is started on the server by default. If you do run Jupyter, I suggest following [these guidelines](http://jupyter-notebook.readthedocs.io/en/latest/public_server.html) for security.
 

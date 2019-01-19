@@ -2,8 +2,8 @@
 #
 # Assumes aws cli set up.
 
-if [ "$#" -ne 3 ]; then
-    echo "Usage: setup-instance.sh ami instanceType name"
+if [ "$#" -ne 4 ]; then
+    echo "Usage: setup-instance.sh ami instanceType name open-extra"
     echo "See aws-magic/README.md for description"
     exit 1
 fi
@@ -13,6 +13,7 @@ set -e
 ami="$1"
 instanceType="$2"
 name="$3"
+open_extra="$4"
 cidr_all="0.0.0.0/0"
 
 if ! which aws; then
@@ -154,12 +155,20 @@ aws ec2 associate-route-table --route-table-id $routeTableId --subnet-id $subnet
 routeTableAssoc=$(cat $tmpout)
 aws ec2 create-route --route-table-id $routeTableId --destination-cidr-block "0.0.0.0/0" --gateway-id $internetGatewayId >/dev/null
 
-echo "security: only open ports 22,6006,8888-8898 from $cidr_all"
+
+if $open_extra ; then
+    ports="22,6006,8888-8898"
+else
+    ports="22"
+fi
+echo "security: only open ports from $cidr_all : $ports"
 aws ec2 create-security-group --group-name $name-security-group --description "sg for $name (lone $instanceType VPC)" --vpc-id $vpcId --query 'GroupId' --output text >$tmpout
 securityGroupId=$(cat $tmpout)
 aws ec2 authorize-security-group-ingress --group-id $securityGroupId --protocol tcp --port 22 --cidr $cidr_all
-aws ec2 authorize-security-group-ingress --group-id $securityGroupId --protocol tcp --port 8888-8898 --cidr $cidr_all
-aws ec2 authorize-security-group-ingress --group-id $securityGroupId --protocol tcp --port 6006 --cidr $cidr_all
+if $open_extra ; then
+    aws ec2 authorize-security-group-ingress --group-id $securityGroupId --protocol tcp --port 8888-8898 --cidr $cidr_all
+    aws ec2 authorize-security-group-ingress --group-id $securityGroupId --protocol tcp --port 6006 --cidr $cidr_all
+fi
 
 echo "Allocating instance $instanceType"
 aws ec2 run-instances --image-id $ami --count 1 --instance-type $instanceType --key-name aws-key-$name --security-group-ids $securityGroupId --subnet-id $subnetId --associate-public-ip-address --block-device-mapping "[ { \"DeviceName\": \"/dev/sda1\", \"Ebs\": { \"VolumeSize\": 128, \"VolumeType\": \"gp2\" } } ]" --query 'Instances[0].InstanceId' --output text >$tmpout

@@ -2,8 +2,8 @@
 #
 # Offer some default options for an Ubuntu instance, interactively.
 
-if [ "$#" -gt 3 ] || [ "$1" = "--help" ]; then
-    echo "Usage: aws-oregon.sh [name] [instancetype] [ami]"
+if [ "$#" -gt 4 ] || [ "$1" = "--help" ]; then
+    echo "Usage: aws-oregon.sh [name] [instancetype] [ami] [open-extra]"
     echo "Thin wrapper with defaults around setup-instance.sh"
     echo "See description in aws-magic/README.md"
     exit 1
@@ -48,4 +48,14 @@ else
     ami=${ami:-$dfl}
 fi
 
-$(dirname $(readlink -f "$0"))/setup-instance.sh "$ami" "$instancetype" "$name"
+if [ "$#" -gt 3 ]; then
+    open_extra="$4"
+else
+    read -p "open ports 6006,8888-8898 in addition to 22 (Y/n)?" yn
+    case "$yn" in
+        [Yy]* ) open_extra="true" ;;
+        * ) open_extra="false" ;;
+    esac
+fi
+
+$(dirname $(readlink -f "$0"))/setup-instance.sh "$ami" "$instancetype" "$name" "$open_extra"
