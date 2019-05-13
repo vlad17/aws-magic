@@ -146,6 +146,20 @@ c.NotebookApp.open_browser = False" >> .jupyter/jupyter_notebook_config.py
 echolog OK
 
 ######################################################################
+# dotfiles
+######################################################################
+
+echolog -n "cloning dotfiles repo... "
+test -d misc || GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' git clone git@github.com:vlad17/misc.git
+echolog OK
+
+echolog -n "installing dotfiles..."
+misc/fresh-start/emacs-install.sh
+misc/fresh-start/config.sh
+sudo apt-get --assume-yes --no-install-recommends install tmux cmake build-essential htop
+echolog OK
+
+######################################################################
 # login greeting
 ######################################################################
 
