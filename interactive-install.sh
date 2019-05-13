@@ -48,14 +48,6 @@ if $INSTALL_DEEP ; then
     echo "jupyter server password"
     passhash=$(python -c "from notebook.auth import passwd; print(passwd())")
 
-    read -p "mujoco license file [~/.mujoco/mjkey.txt]: " mjkey
-    mjkey=${mjkey:-$HOME/.mujoco/mjkey.txt}
-    if ! [ -f "$mjkey" ]; then
-        echo 'mujoco file not present'
-        exit 1
-    fi
-    scp -q -oStrictHostKeyChecking=no -i "$HOME/.ssh/aws-key-$instance.pem" "$mjkey" ubuntu@$($HOME/aws-instances/$instance/ip):~/mjkey.txt
-
     script_for_server=$(dirname $(readlink -f "$0"))/server/server-install-deeplearn.sh
     server_invok="~/server-install-deeplearn.sh $passhash $gittoken $keyname"
 else
