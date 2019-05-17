@@ -4,7 +4,7 @@
 # logging, help, exit functions
 ######################################################################
 
-usage='Usage: server-install-deeplearn.sh passhash gittoken keyname
+usage='Usage: server-install-deeplearn.sh passhash gittoken keyname twiliotoken
   
 passhash should be the sha1 of a password as created in
 http://jupyter-notebook.readthedocs.io/en/latest/public_server.html
@@ -15,6 +15,8 @@ public key control
 
 keyname is the name of the public key that the script will register with
 github.
+
+twiliotoken is a string of env vars for twilio api use
 
 Installs various stuff on the server:
  - if GPU present, nvidia drivers
@@ -63,7 +65,7 @@ function check {
     echolog
 }
 
-if [ "$#" -ne "3" ]; then
+if [ "$#" -ne "4" ]; then
     echolog "$usage"
     trap '' EXIT
     exit 0
@@ -71,6 +73,7 @@ fi
 passhash="$1"
 gittoken="$2"
 keyname="$3"
+twiliotoken="$4"
 
 set -exuo pipefail
 cd
@@ -157,6 +160,7 @@ echolog -n "installing dotfiles..."
 misc/fresh-start/emacs-install.sh
 misc/fresh-start/config.sh
 sudo apt-get --assume-yes --no-install-recommends install tmux cmake build-essential htop
+echo "$twiliotoken" > "~/.twilio.env"
 echolog OK
 
 ######################################################################

@@ -35,6 +35,15 @@ if [ -z "$gittoken" ]; then
     exit 1
 fi
 
+read -p "twilio token file location [~/.twilio.env]: " tokenloc
+twiliotokenloc=${twiliotokenloc:-$HOME/~/.twilio.env}
+twiliotoken=$(cat $twiliotokenloc)
+if [ -z "$twiliotoken" ]; then
+    echo "twilio token invalid"
+    exit 1
+fi
+
+
 read -p "git pub key name [aws-$instance]: " keyname
 keyname=${keyname:-aws-$instance}
 
@@ -49,7 +58,7 @@ if $INSTALL_DEEP ; then
     passhash=$(python -c "from notebook.auth import passwd; print(passwd())")
 
     script_for_server=$(dirname $(readlink -f "$0"))/server/server-install-deeplearn.sh
-    server_invok="~/server-install-deeplearn.sh $passhash $gittoken $keyname"
+    server_invok="~/server-install-deeplearn.sh $passhash $gittoken $keyname $twiliotoken"
 else
     read -p "pre-kubernetes install script [~/bin/pre-kubernetes.sh]: " prek
     prek=${prek:-$HOME/bin/pre-kubernetes.sh}
