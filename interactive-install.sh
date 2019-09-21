@@ -36,7 +36,7 @@ if [ -z "$gittoken" ]; then
 fi
 
 read -p "twilio token file location [~/.twilio.env]: " tokenloc
-twiliotokenloc=${twiliotokenloc:-$HOME/~/.twilio.env}
+twiliotokenloc=${twiliotokenloc:-$HOME/.twilio.env}
 twiliotoken=$(cat $twiliotokenloc)
 if [ -z "$twiliotoken" ]; then
     echo "twilio token invalid"
